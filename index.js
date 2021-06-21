@@ -70,21 +70,21 @@ client.connect((err) => {
     })
       .then(result => {
         if (result) {
-          res.send('employer');
+          res.send({accountType: 'employer'});
         } else {
           jobSeekerCollection.findOne({
             email: req.query.email,
           })
             .then(result => {
               if(result){
-                res.send('job seeker');
+                res.send({accountType: 'job seeker'});
               } else {
                 adminCollection.findOne({
                   email: req.query.email,
                 })
                   .then(result => {
                     if(result){
-                      res.send('admin');
+                      res.send({accountType: 'admin'});
                     } else {
                       res.send(null);
                     }
