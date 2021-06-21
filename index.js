@@ -16,6 +16,9 @@ const client = new MongoClient(uri, {
 
 client.connect((err) => {
   const jobsCollection = client.db(process.env.DB_NAME).collection("jobs");
+  const employersCollection = client.db(process.env.DB_NAME).collection("employers");
+  const jobSeekerCollection = client.db(process.env.DB_NAME).collection("jobseeker");
+  const adminCollection = client.db(process.env.DB_NAME).collection("admin");
   console.log("Database Connected");
 
   app.get("/jobs", (req, res) => {
@@ -36,6 +39,62 @@ client.connect((err) => {
         }
       });
   });
+
+  app.post('/add-job-seeker', (req, res) => {
+    const data = req.body;
+    jobSeekerCollection.insertOne(data)
+      .then(result => {
+        if (result.insertedCount > 0) {
+          res.send(true);
+        } else {
+          res.send(false);
+        }
+      })
+  })
+
+  app.post('/add-employer', (req, res) => {
+    const data = req.body;
+    employersCollection.insertOne(data)
+      .then(result => {
+        if (result.insertedCount > 0) {
+          res.send(true);
+        } else {
+          res.send(false);
+        }
+      })
+  })
+
+  app.get('/check-account-type', (req, res) => {
+    employersCollection.findOne({
+      email: req.query.email,
+    })
+      .then(result => {
+        if (result) {
+          res.send('employer');
+        } else {
+          jobSeekerCollection.findOne({
+            email: req.query.email,
+          })
+            .then(result => {
+              if(result){
+                res.send('job seeker');
+              } else {
+                adminCollection.findOne({
+                  email: req.query.email,
+                })
+                  .then(result => {
+                    if(result){
+                      res.send('admin');
+                    } else {
+                      res.send(null);
+                    }
+                  })
+              }
+            })
+        }
+      });
+  })
+
 });
 
 app.listen(port, () => {
