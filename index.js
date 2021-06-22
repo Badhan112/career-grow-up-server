@@ -30,6 +30,7 @@ client.connect((err) => {
           { jobTitle: { $regex: keywords, $options: "i" } },
           { tags: { $in: tagKeyword } },
         ],
+        approvalStatus: 'approved',
       })
       .toArray((err, documents) => {
         if (err) {
@@ -70,21 +71,21 @@ client.connect((err) => {
     })
       .then(result => {
         if (result) {
-          res.send({accountType: 'employer'});
+          res.send({ accountType: 'employer' });
         } else {
           jobSeekerCollection.findOne({
             email: req.query.email,
           })
             .then(result => {
-              if(result){
-                res.send({accountType: 'job seeker'});
+              if (result) {
+                res.send({ accountType: 'job seeker' });
               } else {
                 adminCollection.findOne({
                   email: req.query.email,
                 })
                   .then(result => {
-                    if(result){
-                      res.send({accountType: 'admin'});
+                    if (result) {
+                      res.send({ accountType: 'admin' });
                     } else {
                       res.send(null);
                     }
@@ -93,6 +94,32 @@ client.connect((err) => {
             }).catch(() => res.send(null));
         }
       }).catch(() => res.send(null));
+  });
+
+  app.post('/add-job-post', (req, res) => {
+    const jobPost = req.body;
+    jobPost.approvalStatus = 'pending';
+
+    jobsCollection.insertOne(jobPost)
+    .then(result => {
+      if(result.insertedCount > 0){
+        res.send(true);
+      } else{
+        res.send(false);
+      }
+    })
+    .catch(() => res.send(false));
+  });
+
+  app.get('/employer-post/:email', (req, res) => {
+    jobsCollection.find({ email: req.params.email })
+    .toArray((err, documents) => {
+      if(err){
+        res.send(null);
+      } else{
+        res.send(documents);
+      }
+    })
   })
 
 });
