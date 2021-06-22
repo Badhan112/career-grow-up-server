@@ -88,11 +88,11 @@ client.connect((err) => {
                     } else {
                       res.send(null);
                     }
-                  })
+                  }).catch(() => res.send(null));
               }
-            })
+            }).catch(() => res.send(null));
         }
-      });
+      }).catch(() => res.send(null));
   })
 
 });
