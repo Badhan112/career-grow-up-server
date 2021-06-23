@@ -20,6 +20,7 @@ client.connect((err) => {
   const employersCollection = client.db(process.env.DB_NAME).collection("employers");
   const jobSeekerCollection = client.db(process.env.DB_NAME).collection("jobseeker");
   const adminCollection = client.db(process.env.DB_NAME).collection("admin");
+  const jobApplicationCollection = client.db(process.env.DB_NAME).collection("jobapplication");
   console.log("Database Connected");
 
   app.get("/jobs", (req, res) => {
@@ -33,11 +34,18 @@ client.connect((err) => {
         ],
         approvalStatus: 'approved',
       })
-      .toArray((err, documents) => {
+      .toArray((err, matchedDocuments) => {
         if (err) {
           res.send([]);
         } else {
-          res.send(documents);
+          jobsCollection.find({
+            jobTitle: { $not: { $regex: keywords, $options: "i" } },
+            tags: { $not: { $in: tagKeyword } },
+            approvalStatus: 'approved',
+          }).toArray((err, unMatchedDocuments) => {
+            const allDocuments = matchedDocuments.concat(unMatchedDocuments);
+            res.send(allDocuments);
+          })
         }
       });
   });
@@ -166,6 +174,29 @@ client.connect((err) => {
     })
     .catch(() => res.send(false));
   });
+
+  app.post('/apply-job', (req, res) => {
+    jobApplicationCollection.insertOne(req.body)
+    .then(result => {
+      if(result.insertedCount > 0){
+        res.send(true);
+      } else {
+        res.send(false);
+      }
+    })
+    .catch(() => res.send(false));
+  });
+
+  app.get('/submited-application/:email', (req, res) => {
+    jobApplicationCollection.find({ applicantEmail: req.params.email })
+    .toArray((err, documents) => {
+      if(err){
+        res.send([]);
+      } else{
+        res.send(documents);
+      }
+    })
+  })
 
 });
 
