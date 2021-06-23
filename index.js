@@ -1,5 +1,6 @@
 const express = require("express");
 const MongoClient = require("mongodb").MongoClient;
+const ObjectId = require("mongodb").ObjectId;
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
@@ -23,7 +24,7 @@ client.connect((err) => {
 
   app.get("/jobs", (req, res) => {
     const keywords = req.query.keywords;
-    const tagKeyword = keywords.split(" ");
+    const tagKeyword = keywords?.split(" ");
     jobsCollection
       .find({
         $or: [
@@ -34,7 +35,7 @@ client.connect((err) => {
       })
       .toArray((err, documents) => {
         if (err) {
-          res.send(err);
+          res.send([]);
         } else {
           res.send(documents);
         }
@@ -120,7 +121,51 @@ client.connect((err) => {
         res.send(documents);
       }
     })
+  });
+
+  app.get('/pending-post', (req, res) => {
+    jobsCollection.find({ approvalStatus: 'pending' })
+    .toArray((err, documents) => {
+      if(err){
+        res.send(null);
+      } else{
+        res.send(documents);
+      }
+    })
+  });
+
+  app.get('/approved-post', (req, res) => {
+    jobsCollection.find({ approvalStatus: 'approved' })
+    .toArray((err, documents) => {
+      if(err){
+        res.send(null);
+      } else{
+        res.send(documents);
+      }
+    })
+  });
+
+  app.get('/job-details/:id', (req, res) => {
+    jobsCollection.findOne({ _id: ObjectId(`${req.params.id}`) })
+    .then(document => res.send(document))
+    .catch(() => res.send(null));
   })
+
+  app.patch('/edit-approval/:id', (req, res) => {
+    console.log(req.params.id, req.body);
+    jobsCollection.updateOne(
+      { _id: ObjectId(req.params.id) },
+      { $set: { approvalStatus : req.body.approvalStatus } }
+    )
+    .then(result => {
+      if(result.modifiedCount > 0){
+        res.send(true);
+      } else{
+        res.send(false);
+      }
+    })
+    .catch(() => res.send(false));
+  });
 
 });
 
