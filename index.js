@@ -231,6 +231,12 @@ client.connect((err) => {
     }).catch(() => res.send(false))
   });
 
+  app.get('/employer-details/:email', (req, res) => {
+    employersCollection.findOne({ email:  req.params.email })
+    .then(result => res.send(result))
+    .catch(() => res.send)
+  })
+
 });
 
 app.listen(process.env.PORT || port, () => {
