@@ -196,7 +196,40 @@ client.connect((err) => {
         res.send(documents);
       }
     })
-  })
+  });
+
+  app.patch('/update-package-offer/:email', (req, res) => {
+    employersCollection.updateOne(
+      { email: req.params.email },
+      { $set: {
+        remainingJobPost: req.body.remainingJobPost,
+        packageRenewalDate: req.body.packageRenewalDate,
+      } 
+      }
+    ).then(result => {
+      if(result.modifiedCount > 0){
+        res.send(true);
+      } else{
+        res.send(false);
+      }
+    });
+  });
+
+  app.patch('/update-remaining-post/:email', (req, res) => {
+    employersCollection.updateOne(
+      { email: req.params.email },
+      { $set: {
+        remainingJobPost: req.body.remainingJobPost,
+      } 
+      }
+    ).then(result => {
+      if(result.modifiedCount > 0){
+        res.send(true);
+      } else{
+        res.send(false);
+      }
+    }).catch(() => res.send(false))
+  });
 
 });
 
